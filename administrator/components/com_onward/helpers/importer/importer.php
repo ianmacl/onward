@@ -46,16 +46,11 @@ class OnwardImporter
 	protected static $sourceDatabase;
 
 	/**
-	 * @var		object		The target database object
-	 */
-	protected static $targetDatabase;
-
-	/**
 	 * Method to get the importer state.
 	 *
 	 * @return	object		The importer state object.
 	 */
-	public static function getState()
+	public static function &getState()
 	{
 		// First, try to load from the internal state.
 		if (!empty(self::$state)) {
@@ -68,62 +63,17 @@ class OnwardImporter
 		$db->setQuery($query);
 		$data = $db->loadObjectList('asset');
 
-		// Setup the profiler if debugging is enabled.
-		if (JFactory::getApplication()->getCfg('debug')) {
-			jimport('joomla.error.profiler');
-			self::$profiler = JProfiler::getInstance('OnwardImporter');
-		}
-
 		// Set the state.
 		self::$state = $data;
 
 		return self::$state;
 	}
 
-	/**
-	 * Method to set the importer state.
-	 *
-	 * @param	array		A new importer state object.
-	 * @return	boolean		True on success, false on failure.
-	 */
-	public static function setState($data)
-	{
-		// Check the state object.
-		if (empty($data) || !is_a($data, 'JObject')) {
-			return false;
-		}
-
-		if (!isset(self::$stateTable)) {
-			self::$stateTable = JTable::getInstance('SiteState', 'OnwardTable');
-		}
-
-		// Set the new internal state.
-		self::$state[$data->asset] = $data;
-
-		self::$stateTable->load($data->id);
-
-		self::$stateTable->bind($data);
-
-		self::$stateTable->store();
-
-		return true;
-	}
-
-	public static function getTargetDbo()
-	{
-		return self::$targetDatabase;
-	}
-	
 	public static function getSourceDbo()
 	{
 		print_r(self::$sourceDatabase);
 		self::$sourceDatabase->test();
 		return self::$sourceDatabase;
-	}
-	
-	public static function setTargetDbo($db)
-	{
-		self::$targetDatabase = $db;
 	}
 	
 	public static function setSourceDbo($db)
@@ -132,8 +82,6 @@ class OnwardImporter
 		self::$sourceDatabase = $db;
 		print_r(self::$sourceDatabase);
 		self::$sourceDatabase->test();
-
-
 	}
 
 	/**
@@ -197,5 +145,91 @@ class OnwardImporter
 
 		return true;
 	}
+
+	public static function getSourceDatabase($site_id = null)
+	{
+		
+		if (isset(self::$sourceDatabase)) {
+			return self::$sourceDatabase;
+		}
+		
+		if (is_null($site_id))
+		{
+			$site_id = self::$site_id;
+		}
+		
+		$siteData = JFactory::getApplication()->getUserState('com_onward.import.site_data.'.(int)$site_id, null);
+
+		if (!is_null($siteData) && $siteData['host']) {
+			self::$sourceDatabase = JDatabase::getInstance($siteData);
+			return self::$sourceDatabase;
+		}
+		$table = JTable::getInstance('Site', 'OnwardTable');
+
+		$table->load($site_id);
+
+		$location = $table->location;
+
+		$configFile = file_get_contents($location.'/configuration.php');
+		
+		$matches = array();
+		if (!preg_match('#var\s+\$user\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error	
+		}
+		$user = $matches[1];
+
+		$matches = array();
+		if (!preg_match('#var\s+\$dbtype\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error	
+		}
+		$dbtype = $matches[1];
+
+		$matches = array();
+		if (!preg_match('#var\s+\$host\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error
+		}
+		$host = $matches[1];
+
+		$matches = array();
+		if (!preg_match('#var\s+\$password\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error
+		}
+		$password = $matches[1];
+
+		$matches = array();
+		if (!preg_match('#var\s+\$db\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error
+		}
+		$database = $matches[1];
+
+		$matches = array();
+		if (!preg_match('#var\s+\$dbprefix\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
+		{
+			// throw error
+		}
+		$dbprefix = $matches[1];
+
+		$option = array(); //prevent problems
+ 
+		$siteData = array();
+		$siteData['site_id'] 	= $site_id;
+		$siteData['user'] 		= $user;
+		$siteData['host'] 		= $host;
+		$siteData['password'] 	= $password;
+		$siteData['database'] 	= $database;
+		$siteData['prefix'] 	= $dbprefix;
+		$siteData['driver']		= $dbtype;
+
+		JFactory::getApplication()->setUserState('com_onward.import.site_data', $siteData);
+
+		self::$sourceDatabase = JDatabase::getInstance($siteData);
+		return self::$sourceDatabase;
+	}
+
 
 }

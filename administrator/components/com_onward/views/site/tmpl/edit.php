@@ -13,20 +13,31 @@ JHtml::addIncludePath(JPATH_COMPONENT.'/helpers/html');
 JHtml::_('behavior.tooltip');
 JHtml::_('behavior.formvalidation');
 JHtml::_('script', 'onward/importer.js', false, true);
+JHtml::_('script', 'system/progressbar-uncompressed.js', false, true);
 ?>
 <script type="text/javascript">
 	Joomla.submitbutton = function(task) {
-		alert(task);
 		if (task == 'site.batch') {
 			onwardImporter.doBatch();
 		} else {
-			//Joomla.submitform(task, document.getElementById('adminForm');
+			Joomla.submitform(task, document.getElementById('adminForm'));
 		}
-	}
-	
+	};
+
+	var progressBars = [];
+
 	var onwardImporter = new Importer({
 		site_id: <?php echo $this->item->id; ?>,
 		url: 'index.php?<?php echo JSession::getFormToken(); ?>=1'
+	});
+
+	window.addEvent('domready', function(){		
+		$$('.progress_bar').each(function(item) {
+			progressBars[item.get('id')] = new Fx.ProgressBar(item, {
+				text: new Element('span', {'class': 'progress-text'}).inject(item, 'bottom'),
+				url: 'http://127.0.0.1/import_test/media/media/images/progress.gif'
+			});
+		});
 	});
 </script>
 
@@ -61,11 +72,8 @@ JHtml::_('script', 'onward/importer.js', false, true);
 				<th>
 					<?php echo JText::_('Scan Date'); ?>
 				</th>
-				<th width="5%">
-					<?php echo JText::_('Total'); ?>
-				</th>
-				<th width="5%">
-					<?php echo JText::_('Complete'); ?>
+				<th width="20%">
+					<?php echo JText::_('Progress'); ?>
 				</th>
 			</tr>
 			</thead>
@@ -86,10 +94,7 @@ JHtml::_('script', 'onward/importer.js', false, true);
 					<?php echo $item->import_date; ?>
 				</td>
 				<td>
-					<?php echo $item->total; ?>
-				</td>
-				<td>
-					<?php echo $item->offset; ?>
+					<?php echo JHTML::_('image','media/bar.gif', JText::_('COM_MEDIA_OVERALL_PROGRESS'), array('class' => 'progress progress_bar', 'id' => 'progress_'.$item->asset), true); ?>
 				</td>
 			</tr>
 		<?php endforeach; ?>

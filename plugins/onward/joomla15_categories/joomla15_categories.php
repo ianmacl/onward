@@ -14,7 +14,7 @@ defined('_JEXEC') or die;
  * @package		Onward
  * @subpackage	jos_sections
  */
-class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
+class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 {
 	/**
 	 * The context is the name of the entity that the plugin imports. This should
@@ -23,7 +23,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 	 *
 	 * @var		string		The plugin identifier.
 	 */
-	protected $context = 'jos_sections';
+	protected $context = 'jos_categories';
 
 	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
@@ -36,7 +36,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 		// Check if we can use the supplied SQL query.
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
 		$sql->select('a.*');
-		$sql->from('#__sections AS a');
+		$sql->from('#__categories AS a');
 
 		return $sql;
 	}

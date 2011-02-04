@@ -23,32 +23,7 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 *
 	 * @var		string		The plugin identifier.
 	 */
-	protected $_context;
-
-	/**
-	 * @var		object		The database object.
-	 */
-	protected $sourceDatabase;
-	
-	/**
-	 * @var		object		The database object.
-	 */
-	protected $targetDatabase;
-
-	/**
-	 * Method to instantiate the indexer adapter.
-	 *
-	 * @param	object		The object to observe.
-	 * @param	array		An array that holds the plugin configuration.
-	 * @return	void
-	 */
-	public function __construct(&$subject, $config)
-	{
-		// Call the parent constructor.
-		parent::__construct($subject, $config);
-		//$this->sourceDatabase = OnwardImporter::getSourceDbo();
-		//$this->targetDatabase = OnwardImporter::getTargetDbo();
-	}
+	protected $context;
 
 	/**
 	 * Method to get the adapter state and push it into the importer.
@@ -58,45 +33,28 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 */
 	public function onStartImport()
 	{
-		// Get the indexer state.
-		$iState	= OnwardImporter::getState();
-
 		// Get the number of data items.
-		$total	= (int)$this->_getContentCount();
+		$site_id = OnwardImporter::$site_id;
 
-		// Add the content count to the total number of items.
-		$iState->totalItems += $total;
-
-		// Populate the indexer state information for the adapter.
-		$iState->pluginState[$this->_context]['total']	= $total;
-		$iState->pluginState[$this->_context]['offset']	= 0;
-
-		// Set the indexer state.
-		OnwardImporter::setState($iState);
-	}
-
-	/**
-	 * Method to prepare for the importer to be run. This method will often
-	 * be used to include dependencies and things of that nature.
-	 *
-	 * @return	boolean		True on success.
-	 * @throws	Exception on error.
-	 */
-	public function onBeforeImport()
-	{
-		// Get the indexer and adapter state.
-		$iState	= OnwardImporter::getState();
-		$aState	= $iState->pluginState[$this->_context];
-
-		// Check the progress of the indexer and the adapter.
-		if ($iState->batchOffset == $iState->batchSize || $aState['offset'] == $aState['total']) {
-			return true;
+		$total = (int)$this->getContentCount();
+		$table = JTable::getInstance('SiteState', 'OnwardTable');
+		if ($table->load(array('site_id' => $site_id, 'asset' => $this->context))) {
+			$table->total = $total;
+			$table->offset = 0;
+		} else {
+			$table->site_id = $site_id;
+			$table->asset = $this->context;
+			$table->total = $total;
+			$table->offset = 0;
 		}
-
-		// Run the setup method.
-		return $this->_setup();
+		
+		if (!$table->store()) {
+			// error
+		}
+		
+		OnwardImporter::$state[$this->context]->total = $total;
+		OnwardImporter::$state[$this->context]->offset = 0;
 	}
-
 
 	/**
 	 * Method to get the other items that this item depends on. 
@@ -113,6 +71,25 @@ abstract class OnwardImporterAdapter extends JPlugin
 	}
 
 	/**
+	 * Method to check if the dependencies for this item have been resolved
+	 */
+	protected function checkDependencies()
+	{
+		$dependencies_met = true;
+		
+		$dependencies = $this->getDependencies();
+		
+		// Check to see if we are ready to process these items
+		foreach ($dependencies AS $dependency)
+		{
+			if ($states[$dependency]['limit'] != $states[$dependency]['offset']) {
+				$dependencies_met = false;
+			}
+		}
+		return $dependencies_met;
+	}
+
+	/**
 	 * Method to index a batch of content items. This method can be called by
 	 * the indexer many times throughout the indexing process depending on how
 	 * much content is available for indexing. It is important to track the
@@ -121,51 +98,37 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @return	boolean		True on success.
 	 * @throws	Exception on error.
 	 */
-	public function onImport($site_id, $source_db, &$states)
+	public function onImport()
 	{
-		// Get the importer and adapter state.
-		$iState	= OnwardImporter::getState();
-		$aState	= $iState->pluginState[$this->_context];
-
-		$dependencies = $this->getDependencies();
-		
-		// Check to see if we are ready to process these items
-		foreach ($dependencies AS $dependency)
-		{
-			if (!$iState[$dependency]['complete'])
-			{
-				return true;
-			}
+		// we don't start importing until all of our dependencies have been met
+		if (!$this->checkDependencies()) {
+			return true;
 		}
 		
-		// Check the progress of the indexer and the adapter.
-		if ($iState->batchOffset == $iState->batchSize || $aState['offset'] == $aState['total']) {
+		$states = OnwardImporter::$state;
+		
+		// Get the batch offset and size.
+		$offset = (int)$states[$this->context]->offset;
+		$total = (int)$states[$this->context]->total;
+
+		if ($offset == $total) {
 			return true;
 		}
 
-		// Get the batch offset and size.
-		$offset	= (int)$aState['offset'];
-		$limit	= (int)($iState->batchSize - $iState->batchOffset);
-
 		// Get the content items to import.
-		$items = $this->_getItems($offset, $limit);
+		$items = $this->getItems($offset, 20);
 
-		// Iterate through the items and index them.
+		// Iterate through the items and import them.
 		for ($i = 0, $n = count($items); $i < $n; $i++)
 		{
 			// Index the item.
-			$this->_import($items[$i]);
-
+			$this->import($items[$i]);
 			// Adjust the offsets.
 			$offset++;
-			$iState->batchOffset++;
-			$iState->totalItems--;
 		}
 
 		// Update the indexer state.
-		$aState['offset'] = $offset;
-		$iState->pluginState[$this->_context] = $aState;
-		OnwardImporter::setState($iState);
+		$states[$this->context]->offset = $offset;
 
 		return true;
 	}
@@ -177,15 +140,7 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	abstract protected function _import($item);
-
-	/**
-	 * Method to setup the adapter before indexing.
-	 *
-	 * @return	boolean		True on success, false on failure.
-	 * @throws	Exception on database error.
-	 */
-	abstract protected function _setup();
+	abstract protected function import($item);
 
 	/**
 	 * Method to get the number of content items available to index.
@@ -193,12 +148,14 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @return	integer		The number of content items available to index.
 	 * @throws	Exception on database error.
 	 */
-	protected function _getContentCount()
+	protected function getContentCount()
 	{
+		$source_db = OnwardImporter::getSourceDatabase();
+		
 		$return = 0;
 
 		// Get the list query.
-		$sql = $this->_getListQuery();
+		$sql = $this->getListQuery();
 
 		// Check if the query is valid.
 		if (empty($sql)) {
@@ -214,13 +171,13 @@ abstract class OnwardImporterAdapter extends JPlugin
 		}
 
 		// Get the total number of content items to import.
-		$this->_db->setQuery($sql);
-		$return = (int)$this->_db->loadResult();
+		$source_db->setQuery($sql);
+		$return = (int)$source_db->loadResult();
 
 		// Check for a database error.
-		if ($this->_db->getErrorNum()) {
+		if ($source_db->getErrorNum()) {
 			// Throw database error exception.
-			throw new Exception($this->_db->getErrorMsg(), 500);
+			throw new Exception($source_db->getErrorMsg(), 500);
 		}
 
 		return $return;
@@ -233,10 +190,10 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @return	object		A OnwardImporterResult object.
 	 * @throws	Exception on database error.
 	 */
-	protected function _getItem($id)
+	protected function getItem($id)
 	{
 		// Get the list query and add the extra WHERE clause.
-		$sql = $this->_getListQuery();
+		$sql = $this->getListQuery();
 		$sql->where('a.id = '.(int)$id);
 
 		// Get the item to index.
@@ -263,40 +220,22 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @return	array		An array of OnwardImporterResult objects.
 	 * @throws	Exception on database error.
 	 */
-	protected function _getItems($offset, $limit, $sql = null)
+	protected function getItems($offset, $limit)
 	{
 		$items = array();
+		$source_db = OnwardImporter::getSourceDatabase();
 
 		// Get the content items to index.
-		$this->_db->setQuery($this->_getListQuery($sql), $offset, $limit);
-		$rows = $this->_db->loadAssocList();
+		$source_db->setQuery($this->getListQuery(), $offset, $limit);
+		$rows = $source_db->loadObjectList();
 
 		// Check for a database error.
-		if ($this->_db->getErrorNum()) {
+		if ($source_db->getErrorNum()) {
 			// Throw database error exception.
-			throw new Exception($this->_db->getErrorMsg(), 500);
+			throw new Exception($source_db->getErrorMsg(), 500);
 		}
 
-		// Convert the items to result objects.
-		foreach ($rows as $row)
-		{
-			// Convert the item to a result object.
-			$item = JArrayHelper::toObject($row, 'OnwardImporterResult');
-
-			// Set the item type.
-			$item->type_id	= $this->_type_id;
-
-			// Set the mime type.
-			$item->mime		= $this->_mime;
-
-			// Set the item layout.
-			$item->layout	= $this->_layout;
-
-			// Add the item to the stack.
-			$items[] = $item;
-		}
-
-		return $items;
+		return $rows;
 	}
 
 	/**
@@ -305,7 +244,7 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 * @param	mixed		A JDatabaseQuery object or null.
 	 * @return	object		A JDatabaseQuery object.
 	 */
-	protected function _getListQuery($sql = null)
+	protected function getListQuery($sql = null)
 	{
 		// Check if we can use the supplied SQL query.
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();

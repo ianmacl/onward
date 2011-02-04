@@ -67,13 +67,13 @@ class OnwardModelSite extends JModelAdmin
 	public function scan($data)
 	{
 		$id = (int)$data['id'];
-		
-		$source_db = OnwardHelperSite::getDbo($id);
+		OnwardImporter::$site_id = $id;
+		$source_db = OnwardImporter::getSourceDatabase($id);
 		JPluginHelper::importPlugin('onward');
 
 		$this->resetState($id);
 
-		JDispatcher::getInstance()->trigger('onStartImport', array($id, $source_db));
+		JDispatcher::getInstance()->trigger('onStartImport');
 	}
 
 	/**
