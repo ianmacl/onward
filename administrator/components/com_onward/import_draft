@@ -1,0 +1,609 @@
+$db = JFactory::getDBO();
+
+
+/******************************************************************************/
+// we start by importing users
+$db->setQuery('ALTER TABLE  old_users ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_users WHERE processed = 0');
+$oldUsers = $db->loadObjectList();
+
+if (count($oldUsers)) {
+	$userObject = JUser::getInstance(0);
+	$processedUsers = array();
+
+	foreach ($oldUsers AS $oldUser) {
+		$userObject->id = 0;
+		$userObject->name = $oldUser->name;
+		$userObject->username = $oldUser->username;
+		$userObject->email = $oldUser->email;
+		$userObject->password = $oldUser->password;
+		$userObject->password_clear = '';
+		$userObject->usertype = 'deprecated';
+		$userObject->block = $oldUser->block;
+		$userObject->sendEmail = $oldUser->sendEmail;
+		$userObject->registerDate = $oldUser->registerDate;
+		$userObject->lastVisitDate = $oldUser->lastvisitDate;
+		$userObject->activation = $oldUser->activation;
+		$userObject->params = $oldUser->params;
+
+		$result = $userObject->save();
+
+		if ($result) {
+			$newId = $userObject->id;
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldUser->id.', '.$userObject->id.', \'jos_users\')');
+			$db->query();
+		}
+		$processedUsers[] = $oldUser->id;
+	}
+
+	$query = 'UPDATE old_users SET processed = 1 WHERE id IN ('.implode(',', $processedUsers).')';
+	$db->setQuery($query);
+	$db->query();
+}
+
+
+/******************************************************************************/
+// Now we import sections
+$db->setQuery('ALTER TABLE old_sections ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_sections WHERE processed = 0 ORDER BY ordering ASC');
+$oldSections = $db->loadObjectList();
+
+if (count($oldSections)) {
+
+	$catObject = JTable::getInstance('category');
+	$processedSections = array();
+
+	foreach ($oldSections AS $oldSection) {
+		print_r($oldSection);
+		$catObject->id = 0;
+		$catObject->parent_id = 1;
+		$catObject->setLocation(1, 'last-child');
+		$catObject->level = 1;
+		$catObject->path = $oldSection->alias;
+		$catObject->extension = 'com_content';
+		$catObject->title = $oldSection->title;
+		$catObject->alias = $oldSection->alias;
+		$catObject->published = $oldSection->published;
+		$catObject->note = '';
+		$catObject->description = $oldSection->description;
+		$catObject->checked_out = 0;
+		$catObject->checked_out_time = '0000-00-00 00:00:00';
+		$catObject->access = $oldSection->access;  // TODO figure out mapping
+		$catObject->params = $oldSection->params;
+		$catObject->metadesc = '';
+		$catObject->metakey = '';
+		$catObject->metadata = '';
+		$catObject->created_user_id = 0;
+		$catObject->created_time = '0000-00-00 00:00:00';
+		$catObject->modified_user_id = 0;
+		$catObject->modified_time = '0000-00-00 00:00:00';
+		$catObject->hits = $oldSection->count; 	// TODO check what count does
+		$catObject->language = '*';
+		// TODO - deal with ordering
+
+		$result = $catObject->store();
+
+		if ($result) {
+			$newId = $catObject->id;
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldSection->id.', '.$catObject->id.', \'jos_sections\')');
+			$db->query();
+
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedSections[] = $oldSection->id;
+	}
+
+	$query = 'UPDATE old_sections SET processed = 1 WHERE id IN ('.implode(',', $processedSections).')';
+	$db->setQuery($query);
+	$db->query();
+}
+
+function getMappedObject($sectionId, $asset)
+{
+	$db = JFactory::getDbo();
+	$query = 'SELECT new_id FROM #__importer_map WHERE old_id = '.(int)$sectionId.' AND asset = \''.$asset.'\'';
+	$db->setQuery($query);
+	$id = $db->loadResult();
+	return $id;
+}
+
+
+/******************************************************************************/
+// Now we import categories
+$db->setQuery('ALTER TABLE old_categories ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_categories WHERE processed = 0 ORDER BY ordering ASC');
+$oldCats = $db->loadObjectList();
+
+if (count($oldCats)) {
+
+	$catObject = JTable::getInstance('category');
+
+	$processedCategories = array();
+	foreach ($oldCats AS $oldCat)
+	{
+		$parent = getMappedObject($oldCat->section, 'jos_sections');
+		$catObject->id = 0;
+		$catObject->parent_id = $parent;
+		$catObject->setLocation($parent, 'last-child');
+		$catObject->level = 2;
+		$catObject->path = $parent.'/'.$oldCat->alias;
+		$catObject->extension = 'com_content';
+		$catObject->title = $oldCat->title;
+		$catObject->alias = $oldCat->alias;
+		$catObject->description = $oldCat->description;
+		$catObject->published = $oldCat->published;
+		$catObject->checked_out = 0;
+		$catObject->checked_out_time = '0000-00-00 00:00:00';
+		$catObject->access = $oldSection->access;  // TODO figure out mapping
+		$catObject->params = $oldSection->params;
+		$catObject->metadesc = '';
+		$catObject->metakey = '';
+		$catObject->metadata = '';
+		$catObject->created_user_id = 0;
+		$catObject->created_time = '0000-00-00 00:00:00';
+		$catObject->modified_user_id = 0;
+		$catObject->modified_time = '0000-00-00 00:00:00';
+		$catObject->hits = $oldCat->count; 	// TODO check what count does
+		$catObject->language = '*';
+		// TODO - deal with ordering
+
+		$result = $catObject->store();
+
+		if ($result) {
+			$newId = $catObject->id;
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldCat->id.', '.$catObject->id.', \'jos_categories\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+
+		$processedCategories[] = $oldCat->id;
+	}
+	$query = 'UPDATE old_categories SET processed = 1 WHERE id IN ('.implode(',', $processedCategories).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+$db->setQuery('ALTER TABLE old_content ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_content WHERE processed = 0 AND catid > 0 ORDER BY ordering ASC');
+
+$oldContents = $db->loadObjectList();
+if (count($oldContents)) {
+
+	$contentObject = JTable::getInstance('content');
+
+	$processedContent = array();
+	foreach ($oldContents AS $oldContent)
+	{
+		$parent = getMappedObject($oldContent->catid, 'jos_categories');
+		$contentObject->id = 0;
+		$contentObject->title = $oldContent->title;
+		$contentObject->alias = $oldContent->alias;
+		$contentObject->title_alias = $oldContent->title_alias;
+		$contentObject->introtext = $oldContent->introtext;
+		$contentObject->fulltext = $oldContent->fulltext;
+		$contentObject->state = $oldContent->state;
+		$contentObject->sectionid = 0;
+		$contentObject->mask = 0;
+		$contentObject->catid = $parent;
+		$contentObject->created = $oldContent->created;
+		$contentObject->created_by = getMappedObject($oldContent->created_by, 'jos_users');
+		$contentObject->created_by_alias = $oldContent->created_by_alias;
+		$contentObject->modified = $oldContent->modified;
+		$contentObject->modified_by = getMappedObject($oldContent->modified_by, 'jos_users');
+		$contentObject->checked_out_time = '0000-00-00 00:00:00';
+		$contentObject->checked_out = 0;
+		$contentObject->publish_up = $oldContent->publish_up;
+		$contentObject->publish_down = $oldContent->publish_down;
+		$contentObject->images = ''; //$oldContent->images;
+		$contentObject->urls = ''; //$oldContent->urls;
+		$contentObject->attribs = $oldContent->attribs;
+		$contentObject->version = $oldContent->version;
+		$contentObject->parentid = 0;
+		$contentObject->ordering = $oldContent->ordering;
+		$contentObject->metakey = $oldContent->metakey;
+		$contentObject->metadesc = $oldContent->metadesc;
+		$contentObject->access = $oldContent->access + 1;  //  TODO Map access
+		$contentObject->hits = $oldContent->hits;
+		$contentObject->metadata = $oldContent->metadata;
+		$contentObject->featured = 0;			// we will have to fix this later when we get the featured table
+		$contentObject->language = '*';
+		$contentObject->xreference = '';
+
+		$result = $contentObject->store();
+
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldContent->id.', '.$contentObject->id.', \'jos_content\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedContent[] = $oldContent->id;
+
+	}
+	$query = 'UPDATE old_content SET processed = 1 WHERE id IN ('.implode(',', $processedContent).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+$db->setQuery('ALTER TABLE old_content_frontpage ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_content_frontpage WHERE processed = 0');
+
+$oldContentFrontpages = $db->loadObjectList();
+if (count($oldContentFrontpages)) {
+	JTable::addIncludePath(JPATH_ADMINISTRATOR.'/components/com_content/tables');
+	$contentFrontpageObject = JTable::getInstance('Featured', 'ContentTable');
+
+	$processedContentFrontPage = array();
+	foreach ($oldContentFrontpages AS $oldContentFrontpage)
+	{
+		$contentFrontpageObject->content_id = getMappedObject($oldContentFrontpage->content_id, 'jos_content_frontpage');
+		$contentFrontpageObject->ordering = $oldContentFrontpage->ordering;
+
+		$result = $contentFrontpageObject->store();
+
+		if ($result) {
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedContentFrontpage[] = $oldContentFrontpage->content_id;
+
+	}
+	$query = 'UPDATE old_content_frontpage SET processed = 1 WHERE content_id IN ('.implode(',', $processedContentFrontpage).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+$db->setQuery('ALTER TABLE old_content_rating ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_content_rating WHERE processed = 0');
+
+$oldContentRatings = $db->loadObjectList();
+if (count($oldContentRatings)) {
+	$processedContentRating = array();
+	foreach ($oldContentRatings AS $oldCR)
+	{
+		$query = 'INSERT INTO #__content_rating (content_id, lastip, rating_sum, rating_count) VALUES ('.
+			(int)getMappedObject($oldCR->content_id).', '.$oldCR->rating_sum.', '.$oldCR->rating_count.', \''.$oldCR->lastip.'\')';
+		$db->setQuery($query);
+		$result = $db->query();
+
+		if ($result) {
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedContentRating[] = $oldContentRating->content_id;
+
+	}
+	$query = 'UPDATE old_content_rating SET processed = 1 WHERE content_id IN ('.implode(',', $processedContentRating).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+$db->setQuery('ALTER TABLE old_menu_types ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_menu_types WHERE processed = 0');
+
+$oldMts = $db->loadObjectList();
+if (count($oldMts)) {
+
+	$mtObject = JTable::getInstance('menutype');
+
+	$processedMt = array();
+	foreach ($oldMts AS $oldMt)
+	{
+		$mtObject->id = 0;
+		$mtObject->menutype = $oldMt->menutype;
+		$mtObject->title = $oldMt->title;
+		$mtObject->description = $oldMt->description;
+
+		$result = $mtObject->store();
+
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldMt->id.', '.$mtObject->id.', \'jos_menu_types\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedMt[] = $oldMt->id;
+
+	}
+	$query = 'UPDATE old_menu_types SET processed = 1 WHERE id IN ('.implode(',', $processedMt).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+$db->setQuery('ALTER TABLE old_components ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_components WHERE processed = 0 AND parent = 0');
+$oldComponents = $db->loadObjectList();
+
+if (count($oldComponents)) {
+
+	$componentObject = JTable::getInstance('extension');
+
+	$processedComponents = array();
+	foreach ($oldComponents AS $oldComponent)
+	{
+		$query = 'SELECT extension_id FROM #__extensions WHERE type = \'component\' AND name = \''.$oldComponent->option.'\'';
+		$db->setQuery($query);
+		$extensionid = $db->loadResult();
+
+		if ($extensionid > 0) {
+			$processedComponents[] = $oldComponent->id;
+			continue;
+		}
+
+		$componentObject->extension_id = 0;
+		$componentObject->name = $oldComponent->option;
+		$componentObject->type = 'component';
+		$componentObject->element = $oldComponent->option;
+		$componentObject->folder = '';
+		$componentObject->client_id = 0;
+		$componentObject->enabled = $oldComponent->enabled;
+		$componentObject->access = 0;
+		$componentObject->protected = $oldComponent->iscore;
+		$componentObject->manifest_cache = '';
+		$componentObject->params = $oldComponent->params;
+		$componentObject->custom_data = '';
+		$componentObject->system_data = '';
+		$componentObject->checked_out = 0;
+		$componentObject->checked_out_time = '0000-00-00 00:00:00';
+		$componentObject->ordering = 0;
+		$componentObject->state = $oldComponent->published;
+
+		$result = $componentObject->store();
+
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldComponent->id.', '.$componentObject->extension_id.', \'jos_components\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedComponents[] = $oldComponent->id;
+
+	}
+	$query = 'UPDATE old_components SET processed = 1 WHERE id IN ('.implode(',', $processedComponents).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+
+
+$db->setQuery('ALTER TABLE old_modules ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_modules WHERE processed = 0');
+$oldModules = $db->loadObjectList();
+
+if (count($oldModules)) {
+
+	$moduleObject = JTable::getInstance('extension');
+
+	$processedModules = array();
+	foreach ($oldModules AS $oldModule)
+	{
+		$query = 'SELECT extension_id FROM #__extensions WHERE type = \'module\' AND name = \''.$oldModule->module.'\'';
+		$db->setQuery($query);
+		$extensionid = $db->loadResult();
+
+		if ($extensionid > 0) {
+			$processedModules[] = $oldModule->id;
+			continue;
+		}
+
+		$moduleObject->extension_id = 0;
+		$moduleObject->name = $oldModule->module;
+		$moduleObject->type = 'module';
+		$moduleObject->element = $oldModule->module;
+		$moduleObject->folder = '';
+		$moduleObject->client_id = $oldModule->client_id;
+		$moduleObject->enabled = 1;
+		$moduleObject->access = 1;
+		$moduleObject->protected = $oldModule->iscore;
+		$moduleObject->manifest_cache = '';
+		$moduleObject->params = $oldModule->params;
+		$moduleObject->custom_data = '';
+		$moduleObject->system_data = '';
+		$moduleObject->checked_out = 0;
+		$moduleObject->checked_out_time = '0000-00-00 00:00:00';
+		$moduleObject->ordering = 0;
+		$moduleObject->state = $oldModule->published;
+
+		$result = $moduleObject->store();
+
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldModule->id.', '.$moduleObject->extension_id.', \'jos_modules\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedModules[] = $oldModule->id;
+
+	}
+	$query = 'UPDATE old_modules SET processed = 1 WHERE id IN ('.implode(',', $processedModules).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+// now we have to copy the actual module data
+$db->setQuery('UPDATE old_modules SET processed = 0');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_modules WHERE processed = 0');
+$oldModules = $db->loadObjectList();
+
+if (count($oldModules)) {
+
+	$moduleObject = JTable::getInstance('module');
+
+	$processedModules = array();
+	foreach ($oldModules AS $oldModule)
+	{
+		$query = 'SELECT extension_id FROM #__extensions WHERE type = \'module\' AND name = \''.$oldModule->module.'\'';
+		$db->setQuery($query);
+		$extensionid = $db->loadResult();
+
+		if ($extensionid <= 0) {
+			$processedModules[] = $oldModule->id;
+			continue;
+		}
+
+		$moduleObject->id = 0;
+		$moduleObject->title = $oldModule->title;
+		$moduleObject->note = '';
+		$moduleObject->content = $oldModule->content;
+		$moduleObject->ordering = $oldModule->ordering;
+		$moduleObject->position = $oldModule->position;
+		$moduleObject->checked_out = 0;
+		$moduleObject->checked_out_time = '0000-00-00 00:00:00';
+		$moduleObject->publish_up = '0000-00-00 00:00:00';
+		$moduleObject->publish_down = '0000-00-00 00:00:00';
+		$moduleObject->published = $oldModule->published;
+		$moduleObject->module = $oldModule->module;
+		$moduleObject->access = $oldModule->access + 1;
+		$moduleObject->showtitle = $oldModule->showtitle;
+		$moduleObject->params = $oldModule->params;
+		$moduleObject->client_id = $oldModule->client_id;
+		$moduleObject->language = '*';
+
+		$result = $moduleObject->store();
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldModule->id.', '.$moduleObject->id.', \'jos_modules_instances\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedModules[] = $oldModule->id;
+
+	}
+	$query = 'UPDATE old_modules SET processed = 1 WHERE id IN ('.implode(',', $processedModules).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+// now we have to copy the actual module data
+$db->setQuery('ALTER TABLE old_menu ADD  `processed` TINYINT( 4 ) NOT NULL');
+$db->query();
+
+$db->setQuery('SELECT * FROM old_menu WHERE processed = 0');
+$oldMenus = $db->loadObjectList();
+
+if (count($oldMenus)) {
+
+	$menuObject = JTable::getInstance('menu');
+
+	$processedMenus = array();
+	foreach ($oldMenus AS $oldMenu)
+	{
+		$menuObject->id = 0;
+		$menuObject->menutype = $oldMenu->menutype;
+		$menuObject->title = $oldMenu->name;
+		$menuObject->alias = $oldMenu->alias;
+		$menuObject->note = '';
+		$menuObject->path = $oldMenu->alias;	// TODO - calculate real path
+		$menuObject->link = $oldMenu->link;
+		$menuObject->type = $oldMenu->type;
+		$menuObject->published = $oldMenu->published;
+		$menuObject->
+
+		$moduleObject->id = 0;
+		$moduleObject->title = $oldModule->title;
+		$moduleObject->note = '';
+		$moduleObject->content = $oldModule->content;
+		$moduleObject->ordering = $oldModule->ordering;
+		$moduleObject->position = $oldModule->position;
+		$moduleObject->checked_out = 0;
+		$moduleObject->checked_out_time = '0000-00-00 00:00:00';
+		$moduleObject->publish_up = '0000-00-00 00:00:00';
+		$moduleObject->publish_down = '0000-00-00 00:00:00';
+		$moduleObject->published = $oldModule->published;
+		$moduleObject->module = $oldModule->module;
+		$moduleObject->access = $oldModule->access + 1;
+		$moduleObject->showtitle = $oldModule->showtitle;
+		$moduleObject->params = $oldModule->params;
+		$moduleObject->client_id = $oldModule->client_id;
+		$moduleObject->language = '*';
+
+		$result = $moduleObject->store();
+
+		if ($result) {
+			$db->setQuery('INSERT INTO #__importer_map (old_id, new_id, asset) VALUES ('.$oldModule->id.', '.$moduleObject->id.', \'jos_modules_instances\')');
+			$db->query();
+		} else {
+			$error = new stdClass;
+			// store error info
+		}
+		$processedModules[] = $oldModule->id;
+
+	}
+	$query = 'UPDATE old_modules SET processed = 1 WHERE id IN ('.implode(',', $processedModules).')';
+	$db->setQuery($query);
+	$db->query();
+
+} else {
+	// set content categories done marker
+}
+
+
+

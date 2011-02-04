@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id$ -->
+<extension type="component" version="1.6.0" method="upgrade">
+	<name>com_onward</name>
+	<author>Joomla! Project</author>
+	<creationDate>January 2011</creationDate>
+	<copyright>(C) 2005 - 2011 Open Source Matters. All rights reserved.	</copyright>
+	<license>GNU General Public License version 2 or later; see	LICENSE.txt</license>
+	<authorEmail>admin@joomla.org</authorEmail>
+	<authorUrl>www.joomla.org</authorUrl>
+	<version>1.6.0</version>
+	<description>COM_ONWARD_XML_DESCRIPTION</description>
+
+	<install> <!-- Runs on install -->
+    		<sql>
+        	<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+  		</sql>
+	</install>
+	<uninstall> <!-- Runs on uninstall -->
+		<sql>
+        		<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<files folder="site">
+		<filename>onward.php</filename>
+		<filename>index.html</filename>
+	</files>
+	<administration>
+		<!-- Administrator Menu -->
+		<menu img="components/com_onward/onward-16.png">Onward</menu>
+		<files folder="admin">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<filename>onward.php</filename>
+			<filename>controller.php</filename>
+			<filename>index.html</filename>
+			<folder>helpers</folder>
+			<folder>controllers</folder>
+			<folder>language</folder>
+			<folder>models</folder>
+			<folder>sql</folder>
+			<folder>tables</folder>
+			<folder>views</folder>
+		</files>
+		<languages folder="admin">
+			<language tag="en-GB">language/en-GB.com_onward.ini</language>
+		</languages>
+	</administration>
+
+	<!-- Extension Update Specification -->
+	<updateservers>
+	</updateservers>
+
+	<!-- Tables -->
+	<!-- These are used for backups to determine which tables to backup; ones marked optional are only backed up if they exist -->
+	<tables>
+		<table>#__onward_sites</table>
+	</tables>
+
+	<!--  Dependencies -->
+	<dependencies>
+		<dependency type="platform" name="joomla" operator="=" version="1.6" />
+	</dependencies>
+</extension>

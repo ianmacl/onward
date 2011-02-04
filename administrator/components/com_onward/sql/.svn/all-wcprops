@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/joomla/!svn/ver/20239/development/trunk/administrator/components/com_weblinks/sql
+END
+uninstall.mysql.utf8.sql
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/joomla/!svn/ver/19284/development/trunk/administrator/components/com_weblinks/sql/uninstall.mysql.utf8.sql
+END
+index.html
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/joomla/!svn/ver/20239/development/trunk/administrator/components/com_weblinks/sql/index.html
+END
+install.mysql.utf8.sql
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/joomla/!svn/ver/19284/development/trunk/administrator/components/com_weblinks/sql/install.mysql.utf8.sql
+END
