@@ -11,8 +11,8 @@ defined('_JEXEC') or die;
 /**
  * Prototype adapter class for the Onward Importer package.
  *
- * @package		JXtended.Finder
- * @subpackage	com_finder
+ * @package	Onward	
+ * @subpackage	joomla15_users
  */
 class plgOnwardJoomla15_Users extends OnwardImporterAdapter
 {
@@ -42,7 +42,7 @@ class plgOnwardJoomla15_Users extends OnwardImporterAdapter
 	}
 
 	/**
-	 * Method to index an item.
+	 * Method to import an item.
 	 *
 	 * @param	object		The item to import.
 	 * @return	boolean		True on success.

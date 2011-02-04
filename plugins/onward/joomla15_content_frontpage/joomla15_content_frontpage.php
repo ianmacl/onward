@@ -9,12 +9,12 @@
 defined('_JEXEC') or die;
 
 /**
- * Joomla 1.5 Sections Importer Plugin
+ * Prototype adapter class for the Onward Importer package.
  *
- * @package		Onward
- * @subpackage	jos_sections
+ * @package	Onward	
+ * @subpackage	joomla15_content_frontpage
  */
-class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
+class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 {
 	/**
 	 * The context is the name of the entity that the plugin imports. This should
@@ -23,7 +23,7 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 	 *
 	 * @var		string		The plugin identifier.
 	 */
-	protected $context = 'jos_categories';
+	protected $context = 'jos_content_frontpage';
 
 	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
@@ -36,7 +36,7 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 		// Check if we can use the supplied SQL query.
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
 		$sql->select('a.*');
-		$sql->from('#__categories AS a');
+		$sql->from('#__content_frontpage AS a');
 
 		return $sql;
 	}
@@ -50,6 +50,5 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 	 */
 	protected function import($oldUser)
 	{
-
 	}
 }

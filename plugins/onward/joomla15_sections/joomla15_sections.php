@@ -42,7 +42,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 	}
 
 	/**
-	 * Method to index an item.
+	 * Method to import an item.
 	 *
 	 * @param	object		The item to import.
 	 * @return	boolean		True on success.
