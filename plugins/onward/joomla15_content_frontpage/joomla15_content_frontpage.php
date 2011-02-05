@@ -25,6 +25,11 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 */
 	protected $context = 'jos_content_frontpage';
 
+	protected function getDependencies()
+	{
+		return array('jos_content');
+	}
+
 	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
 	 *
@@ -48,7 +53,28 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	protected function import($oldUser)
+	protected function import($oldContentFrontpage)
 	{
+		JTable::addIncludePath(JPATH_ADMINISTRATOR.'/components/com_content/tables');
+		$contentFrontpageObject = JTable::getInstance('Featured', 'ContentTable');
+		
+		$contentFrontpageObject->content_id = OnwardImporter::getMappedId('jos_content_frontpage', $oldContentFrontpage->content_id);
+		$contentFrontpageObject->ordering = $oldContentFrontpage->ordering;
+
+		$result = $contentFrontpageObject->store();
+
+		$contentObject = JTable::getInstance('Content');
+
+		$contentObject->load($contentFrontpageObject->content_id);
+		$contentObject->featured = 1;
+		$contentObject->store();
+
+		if ($result) {
+			OnwardImporter::map($this->context, $oldContentFrontpage->id, $contentFrontpageObject->id);
+			return true;
+		} else {
+			return false;
+		}
+		
 	}
 }

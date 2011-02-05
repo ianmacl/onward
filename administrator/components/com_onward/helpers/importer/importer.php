@@ -101,24 +101,31 @@ class OnwardImporter
 		$db->query();
 	}
 
-	public static function map($data)
+	public static function map($asset, $original_id, $new_id, $site_id = false)
 	{
 		if (!isset(self::$mapTable)) {
 			self::$mapTable = JTable::getInstance('DataMap', 'OnwardTable');
 		}
-		
+
 		$mapper = self::$mapTable;
-		$mapper->site_id = self::$site_id;
-		$mapper->asset = $data->asset;
-		$mapper->original_id = $data->original_id;
-		$mapper->new_id = $data->new_id;
+		$mapper->site_id = $site_id ? $site_id : self::$site_id;
+		$mapper->asset = $asset;
+		$mapper->original_id = $original_id;
+		$mapper->new_id = $new_id;
 		$mapper->store();
 	}
 	
-	public static function getMappedId($asset, $original_id)
+	public static function getMappedId($asset, $original_id, $site_id = false)
 	{
+		$site_id = $site_id ? $site_id : self::$site_id;
+
 		$db = JFactory::getDbo();
-		$query = 'SELECT new_id FROM #__onward_data_map WHERE original_id = '.(int)$original_id.' AND site_id = '.(int)self::$site_id.' AND asset = \''.$asset.'\'';
+		$query = new JDatabaseQuery();
+		$query->select('new_id');
+		$query->from('#__onward_data_map');
+		$query->where('original_id = '.(int)$original_id);
+		$query->where('site_id = '.(int)$site_id);
+		$query->where('asset = '.$db->quote($asset));
 		$db->setQuery($query);
 		$id = $db->loadResult();
 		return $id;

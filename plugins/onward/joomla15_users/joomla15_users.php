@@ -50,9 +50,6 @@ class plgOnwardJoomla15_Users extends OnwardImporterAdapter
 	 */
 	protected function import($oldUser)
 	{
-		$db = JFactory::getDBO();
-		
-		//$userObject = JUser::getInstance(0);
 		$userObject = JTable::getInstance('user');
 
 		$userObject->id = 0;
@@ -71,9 +68,10 @@ class plgOnwardJoomla15_Users extends OnwardImporterAdapter
 		$result = $userObject->store();
 
 		if ($result) {
-			$newId = $userObject->id;
-			$db->setQuery('INSERT INTO #__onward_data_map (site_id, asset, original_id, new_id) VALUES (13, \'jos_users\', '.$oldUser->id.', '.$userObject->id.')');
-			$db->query();
+			OnwardImporter::map($this->context, $oldUser->id, $userObject->id);
+			return true;
+		} else {
+			return false;
 		}
 	}
 }

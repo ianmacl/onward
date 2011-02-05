@@ -25,6 +25,11 @@ class plgOnwardJoomla15_Content extends OnwardImporterAdapter
 	 */
 	protected $context = 'jos_content';
 
+	protected function getDependencies()
+	{
+		return array('jos_categories', 'jos_users');
+	}
+
 	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
 	 *
@@ -48,7 +53,53 @@ class plgOnwardJoomla15_Content extends OnwardImporterAdapter
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	protected function import($oldUser)
+	protected function import($oldContent)
 	{
+		$contentObject = JTable::getInstance('content');
+
+		$parent = OnwardImporter::getMappedId('jos_categories', $oldContent->catid);
+		$contentObject->id = 0;
+		$contentObject->title = $oldContent->title;
+		$contentObject->alias = $oldContent->alias;
+		$contentObject->title_alias = $oldContent->title_alias;
+		$contentObject->introtext = $oldContent->introtext;
+		$contentObject->fulltext = $oldContent->fulltext;
+		$contentObject->state = $oldContent->state;
+		$contentObject->sectionid = 0;
+		$contentObject->mask = 0;
+		$contentObject->catid = $parent;
+		$contentObject->created = $oldContent->created;
+		$contentObject->created_by = OnwardImporter::getMappedId('jos_users', $oldContent->created_by);
+		$contentObject->created_by_alias = $oldContent->created_by_alias;
+		$contentObject->modified = $oldContent->modified;
+		$contentObject->modified_by = OnwardImporter::getMappedId('jos_users', $oldContent->modified_by);
+		$contentObject->checked_out_time = '0000-00-00 00:00:00';
+		$contentObject->checked_out = 0;
+		$contentObject->publish_up = $oldContent->publish_up;
+		$contentObject->publish_down = $oldContent->publish_down;
+		$contentObject->images = ''; //$oldContent->images;
+		$contentObject->urls = ''; //$oldContent->urls;
+		$contentObject->attribs = $oldContent->attribs;
+		$contentObject->version = $oldContent->version;
+		$contentObject->parentid = 0;
+		$contentObject->ordering = $oldContent->ordering;
+		$contentObject->metakey = $oldContent->metakey;
+		$contentObject->metadesc = $oldContent->metadesc;
+		$contentObject->access = $oldContent->access + 1;  //  TODO Map access
+		$contentObject->hits = $oldContent->hits;
+		$contentObject->metadata = $oldContent->metadata;
+		$contentObject->featured = 0;			// we will have to fix this later when we get the featured table
+		$contentObject->language = '*';
+		$contentObject->xreference = '';
+
+		$result = $contentObject->store();
+
+		if ($result) {
+			OnwardImporter::map($this->context, $oldContent->id, $contentObject->id);
+			return true;
+		} else {
+			return false;
+		}
+
 	}
 }

@@ -41,6 +41,11 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 		return $sql;
 	}
 
+	protected function getDependencies()
+	{
+		return array('jos_sections');
+	}
+
 	/**
 	 * Method to import an item.
 	 *
@@ -48,8 +53,43 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	protected function import($oldUser)
+	protected function import($oldCategory)
 	{
+		$catObject = JTable::getInstance('category');
 
+		$parent = OnwardImporter::getMappedId('jos_sections', $oldCategory->section);
+		$catObject->id = 0;
+		$catObject->parent_id = $parent;
+		$catObject->setLocation($parent, 'last-child');
+		$catObject->level = 2;
+		$catObject->path = $parent.'/'.$oldCategory->alias;
+		$catObject->extension = 'com_content';
+		$catObject->title = $oldCategory->title;
+		$catObject->alias = $oldCategory->alias;
+		$catObject->description = $oldCategory->description;
+		$catObject->published = $oldCategory->published;
+		$catObject->checked_out = 0;
+		$catObject->checked_out_time = '0000-00-00 00:00:00';
+		$catObject->access = $oldCategory->access;  // TODO figure out mapping
+		$catObject->params = $oldCategory->params;
+		$catObject->metadesc = '';
+		$catObject->metakey = '';
+		$catObject->metadata = '';
+		$catObject->created_user_id = 0;
+		$catObject->created_time = '0000-00-00 00:00:00';
+		$catObject->modified_user_id = 0;
+		$catObject->modified_time = '0000-00-00 00:00:00';
+		$catObject->hits = $oldCategory->count; 	// TODO check what count does
+		$catObject->language = '*';
+		// TODO - deal with ordering
+
+		$result = $catObject->store();
+
+		if ($result) {
+			OnwardImporter::map($this->context, $oldCategory->id, $catObject->id);
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

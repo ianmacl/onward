@@ -25,6 +25,8 @@ abstract class OnwardImporterAdapter extends JPlugin
 	 */
 	protected $context;
 
+	protected $site_id;
+
 	/**
 	 * Method to get the adapter state and push it into the importer.
 	 *
@@ -34,15 +36,15 @@ abstract class OnwardImporterAdapter extends JPlugin
 	public function onStartImport()
 	{
 		// Get the number of data items.
-		$site_id = OnwardImporter::$site_id;
+		$this->site_id = OnwardImporter::$site_id;
 
 		$total = (int)$this->getContentCount();
 		$table = JTable::getInstance('SiteState', 'OnwardTable');
-		if ($table->load(array('site_id' => $site_id, 'asset' => $this->context))) {
+		if ($table->load(array('site_id' => $this->site_id, 'asset' => $this->context))) {
 			$table->total = $total;
 			$table->offset = 0;
 		} else {
-			$table->site_id = $site_id;
+			$table->site_id = $this->site_id;
 			$table->asset = $this->context;
 			$table->total = $total;
 			$table->offset = 0;
@@ -82,7 +84,7 @@ abstract class OnwardImporterAdapter extends JPlugin
 		// Check to see if we are ready to process these items
 		foreach ($dependencies AS $dependency)
 		{
-			if ($states[$dependency]['limit'] != $states[$dependency]['offset']) {
+			if (OnwardImporter::$state[$dependency]->total != OnwardImporter::$state[$dependency]->offset) {
 				$dependencies_met = false;
 			}
 		}
