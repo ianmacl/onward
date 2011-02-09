@@ -35,7 +35,7 @@ JHtml::_('script', 'system/progressbar-uncompressed.js', false, true);
 		$$('.progress_bar').each(function(item) {
 			progressBars[item.get('id')] = new Fx.ProgressBar(item, {
 				text: new Element('span', {'class': 'progress-text'}).inject(item, 'bottom'),
-				url: 'http://127.0.0.1/import_test/media/media/images/progress.gif'
+				url: '<?php echo JUri::root(); ?>media/media/images/progress.gif'
 			});
 		});
 	});

@@ -70,7 +70,6 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 		$contentObject->store();
 
 		if ($result) {
-			OnwardImporter::map($this->context, $oldContentFrontpage->id, $contentFrontpageObject->id);
 			return true;
 		} else {
 			return false;
