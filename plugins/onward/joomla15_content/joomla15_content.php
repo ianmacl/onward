@@ -46,6 +46,14 @@ class plgOnwardJoomla15_Content extends OnwardImporterAdapter
 		return $sql;
 	}
 
+	protected function getUncategorisedId()
+	{
+		$db = JFactory::getDBO();
+		$db->setQuery('SELECT id FROM #__categories WHERE path = \'uncategorised\' AND extension = \'com_content\'');
+		$result = $db->loadResult();
+	}
+
+
 	/**
 	 * Method to import an item.
 	 *
@@ -57,7 +65,15 @@ class plgOnwardJoomla15_Content extends OnwardImporterAdapter
 	{
 		$contentObject = JTable::getInstance('content');
 
-		$parent = OnwardImporter::getMappedId('jos_categories', $oldContent->catid);
+		if ($oldContent->sectionid == 0 && $oldContent->catid == 0)
+		{
+			$category = $this->getUncategorisedId();
+		}
+		else
+		{
+			$category = OnwardImporter::getMappedId('jos_categories', $oldContent->catid);
+		}
+		
 		$contentObject->id = 0;
 		$contentObject->title = $oldContent->title;
 		$contentObject->alias = $oldContent->alias;
@@ -67,7 +83,7 @@ class plgOnwardJoomla15_Content extends OnwardImporterAdapter
 		$contentObject->state = $oldContent->state;
 		$contentObject->sectionid = 0;
 		$contentObject->mask = 0;
-		$contentObject->catid = $parent;
+		$contentObject->catid = $category;
 		$contentObject->created = $oldContent->created;
 		$contentObject->created_by = OnwardImporter::getMappedId('jos_users', $oldContent->created_by);
 		$contentObject->created_by_alias = $oldContent->created_by_alias;

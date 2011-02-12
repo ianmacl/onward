@@ -14,7 +14,7 @@ defined('_JEXEC') or die;
  * @package	Onward	
  * @subpackage	joomla15_content_frontpage
  */
-class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
+class plgOnwardJoomla15_Content_Rating extends OnwardImporterAdapter
 {
 	/**
 	 * The context is the name of the entity that the plugin imports. This should
@@ -23,7 +23,7 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 *
 	 * @var		string		The plugin identifier.
 	 */
-	protected $context = 'jos_content_frontpage';
+	protected $context = 'jos_content_rating';
 
 	protected function getDependencies()
 	{
@@ -41,7 +41,7 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 		// Check if we can use the supplied SQL query.
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
 		$sql->select('a.*');
-		$sql->from('#__content_frontpage AS a');
+		$sql->from('#__content_rating AS a');
 
 		return $sql;
 	}
@@ -53,12 +53,14 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	protected function import($oldContentFrontpage)
+	protected function import($oldContentRating)
 	{
 		$db = JFactory::getDBO();
 
-		$content_id = (int)OnwardImporter::getMappedId('jos_content', $oldContentFrontpage->content_id);
-		$ordering = (int)$oldContentFrontpage->ordering;
+		$content_id = (int)OnwardImporter::getMappedId('jos_content', $oldContentRating->content_id);
+		$rating_sum = (int)$oldContentRating->rating_sum;
+		$rating_count = (int)$oldContentRating->rating_count;
+		$lastip = $oldContentRating->lastip;
 
 		if ($content_id == 0)
 		{
@@ -66,8 +68,8 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 		}
 
 		$db->setQuery(
-			'INSERT INTO #__content_frontpage (`content_id`, `ordering`)' .
-			' VALUES ('.$content_id.', '. $ordering.')'
+			'INSERT INTO #__content_rating (`content_id`, `rating_sum`, `rating_count`, `lastip`)' .
+			' VALUES ('.$content_id.', '.$rating_sum.', '.$rating_count.', '.$db->quote($lastip).')'
 		);
 
 		if (!$db->query()) {
@@ -75,16 +77,7 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 			return false;
 		}
 
-		$db->setQuery(
-			'UPDATE #__content AS a' .
-			' SET a.featured = 1'.
-			' WHERE a.id IN ('.$content_id.')'
-		);
-		if (!$db->query()) {
-			throw new Exception($db->getErrorMsg());
-		}
-
-
-		return true;
+		return false;
+		
 	}
 }

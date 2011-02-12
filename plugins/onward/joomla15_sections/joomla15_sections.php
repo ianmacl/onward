@@ -50,6 +50,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 	 */
 	protected function import($oldSection)
 	{
+
 		$catObject = JTable::getInstance('category');
 
 		$catObject->id = 0;
@@ -67,7 +68,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 		$catObject->checked_out_time = '0000-00-00 00:00:00';
 		$catObject->access = $oldSection->access + 1;  // TODO figure out mapping
 		$catObject->params = $oldSection->params;
-		$catObject->metadesc = '';
+		$catObject->metadesc = ''.$oldSection->id;
 		$catObject->metakey = '';
 		$catObject->metadata = '';
 		$catObject->created_user_id = 0;
@@ -80,7 +81,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 		$result = $catObject->store();
 
 		if ($result) {
-			OnwardImporter::map($this->context, $oldSection->id, $catObject->id);
+			OnwardImporter::map($this->context, (int)$oldSection->id, $catObject->id);
 			return true;
 		} else {
 			return false;

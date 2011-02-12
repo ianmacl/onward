@@ -9,12 +9,12 @@
 defined('_JEXEC') or die;
 
 /**
- * Prototype adapter class for the Onward Importer package.
+ * Joomla 1.5 Sections Importer Plugin
  *
- * @package	Onward	
- * @subpackage	joomla15_content_frontpage
+ * @package		Onward
+ * @subpackage	jos_sections
  */
-class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
+class plgOnwardJoomla15_Menu_Types extends OnwardImporterAdapter
 {
 	/**
 	 * The context is the name of the entity that the plugin imports. This should
@@ -23,12 +23,7 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 *
 	 * @var		string		The plugin identifier.
 	 */
-	protected $context = 'jos_content_frontpage';
-
-	protected function getDependencies()
-	{
-		return array('jos_content');
-	}
+	protected $context = 'jos_menu_types';
 
 	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
@@ -41,7 +36,7 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 		// Check if we can use the supplied SQL query.
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
 		$sql->select('a.*');
-		$sql->from('#__content_frontpage AS a');
+		$sql->from('#__menu_types AS a');
 
 		return $sql;
 	}
@@ -53,38 +48,23 @@ class plgOnwardJoomla15_Content_Frontpage extends OnwardImporterAdapter
 	 * @return	boolean		True on success.
 	 * @throws	Exception on database error.
 	 */
-	protected function import($oldContentFrontpage)
+	protected function import($oldMenutype)
 	{
-		$db = JFactory::getDBO();
 
-		$content_id = (int)OnwardImporter::getMappedId('jos_content', $oldContentFrontpage->content_id);
-		$ordering = (int)$oldContentFrontpage->ordering;
+		$mtObject = JTable::getInstance('menutype');
 
-		if ($content_id == 0)
-		{
+		$mtObject->id = 0;
+		$mtObject->menutype = $oldMenutype->menutype;
+		$mtObject->title = $oldMenutype->title;
+		$mtObject->description = $oldMenutype->description;
+
+		$result = $mtObject->store();
+
+		if ($result) {
+			OnwardImporter::map($this->context, (int)$oldMenutype->id, $mtObject->id);
+			return true;
+		} else {
 			return false;
 		}
-
-		$db->setQuery(
-			'INSERT INTO #__content_frontpage (`content_id`, `ordering`)' .
-			' VALUES ('.$content_id.', '. $ordering.')'
-		);
-
-		if (!$db->query()) {
-			$this->setError($db->getErrorMsg());
-			return false;
-		}
-
-		$db->setQuery(
-			'UPDATE #__content AS a' .
-			' SET a.featured = 1'.
-			' WHERE a.id IN ('.$content_id.')'
-		);
-		if (!$db->query()) {
-			throw new Exception($db->getErrorMsg());
-		}
-
-
-		return true;
 	}
 }

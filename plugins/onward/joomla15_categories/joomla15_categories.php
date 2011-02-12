@@ -37,6 +37,7 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
 		$sql->select('a.*');
 		$sql->from('#__categories AS a');
+		$sql->where('0 + a.section > 0');
 
 		return $sql;
 	}
@@ -58,11 +59,15 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 		$catObject = JTable::getInstance('category');
 
 		$parent = OnwardImporter::getMappedId('jos_sections', $oldCategory->section);
+
+		$parentCategory = JTable::getInstance('category');
+		$parentCategory->load($parent);
+		//print_r($parentCategory);
 		$catObject->id = 0;
 		$catObject->parent_id = $parent;
 		$catObject->setLocation($parent, 'last-child');
 		$catObject->level = 2;
-		$catObject->path = $parent.'/'.$oldCategory->alias;
+		$catObject->path = $parentCategory->path.'/'.$oldCategory->alias;
 		$catObject->extension = 'com_content';
 		$catObject->title = $oldCategory->title;
 		$catObject->alias = $oldCategory->alias;
@@ -70,7 +75,7 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 		$catObject->published = $oldCategory->published;
 		$catObject->checked_out = 0;
 		$catObject->checked_out_time = '0000-00-00 00:00:00';
-		$catObject->access = $oldCategory->access;  // TODO figure out mapping
+		$catObject->access = $oldCategory->access + 1;  // TODO figure out mapping
 		$catObject->params = $oldCategory->params;
 		$catObject->metadesc = '';
 		$catObject->metakey = '';

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="1.6" type="plugin" group="onward">
+	<name>plg_onward_joomla15_menu_types</name>
+	<author>Joomla! Project</author>
+	<creationDate>January 2011</creationDate>
+	<copyright>Copyright (C) 2005 - 2011 Open Source Matters. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<authorEmail>admin@joomla.org</authorEmail>
+	<authorUrl>www.joomla.org</authorUrl>
+	<version>1.6.0</version>
+	<description>PLG_ONWARD_JOOMLA15_MENU_TYPES_XML_DESCRIPTION</description>
+	<files>
+		<filename plugin="joomla15_menu_types">joomla15_menu_types.php</filename>
+		<filename>index.html</filename>
+	</files>
+
+	<config>
+	</config>
+</extension>

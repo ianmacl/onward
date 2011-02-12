@@ -108,15 +108,18 @@ class OnwardImporter
 		}
 
 		$mapper = self::$mapTable;
+		$mapper->id = 0;
 		$mapper->site_id = $site_id ? $site_id : self::$site_id;
 		$mapper->asset = $asset;
 		$mapper->original_id = $original_id;
 		$mapper->new_id = $new_id;
+
 		$mapper->store();
 	}
 	
 	public static function getMappedId($asset, $original_id, $site_id = false)
 	{
+
 		$site_id = $site_id ? $site_id : self::$site_id;
 
 		$db = JFactory::getDbo();
@@ -128,6 +131,7 @@ class OnwardImporter
 		$query->where('asset = '.$db->quote($asset));
 		$db->setQuery($query);
 		$id = $db->loadResult();
+
 		return $id;
 	}
 
@@ -231,6 +235,7 @@ class OnwardImporter
 		$siteData['database'] 	= $database;
 		$siteData['prefix'] 	= $dbprefix;
 		$siteData['driver']		= $dbtype;
+		$siteData['location']	= $location;
 
 		JFactory::getApplication()->setUserState('com_onward.import.site_data', $siteData);
 
