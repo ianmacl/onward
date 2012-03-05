@@ -75,7 +75,7 @@ class OnwardImporter
 		self::$sourceDatabase->test();
 		return self::$sourceDatabase;
 	}
-	
+
 	public static function setSourceDbo($db)
 	{
 
@@ -95,7 +95,7 @@ class OnwardImporter
 		self::$state = null;
 
 		$db = JFactory::getDBO();
-		
+
 		$query = 'DELETE FROM #__onward_site_state WHERE site_id = '.(int)self::$site_id;
 		$db->setQuery($query);
 		$db->query();
@@ -116,14 +116,14 @@ class OnwardImporter
 
 		$mapper->store();
 	}
-	
+
 	public static function getMappedId($asset, $original_id, $site_id = false)
 	{
 
 		$site_id = $site_id ? $site_id : self::$site_id;
 
 		$db = JFactory::getDbo();
-		$query = new JDatabaseQuery();
+		$query = $db->getQuery(true);
 		$query->select('new_id');
 		$query->from('#__onward_data_map');
 		$query->where('original_id = '.(int)$original_id);
@@ -159,16 +159,16 @@ class OnwardImporter
 
 	public static function getSourceDatabase($site_id = null)
 	{
-		
+
 		if (isset(self::$sourceDatabase)) {
 			return self::$sourceDatabase;
 		}
-		
+
 		if (is_null($site_id))
 		{
 			$site_id = self::$site_id;
 		}
-		
+
 		$siteData = JFactory::getApplication()->getUserState('com_onward.import.site_data.'.(int)$site_id, null);
 
 		if (!is_null($siteData) && $siteData['host']) {
@@ -182,18 +182,18 @@ class OnwardImporter
 		$location = $table->location;
 
 		$configFile = file_get_contents($location.'/configuration.php');
-		
+
 		$matches = array();
 		if (!preg_match('#var\s+\$user\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
 		{
-			// throw error	
+			// throw error
 		}
 		$user = $matches[1];
 
 		$matches = array();
 		if (!preg_match('#var\s+\$dbtype\s*=\s*[\']([^\']+)[\']\s*;#', $configFile, $matches))
 		{
-			// throw error	
+			// throw error
 		}
 		$dbtype = $matches[1];
 
@@ -226,7 +226,7 @@ class OnwardImporter
 		$dbprefix = $matches[1];
 
 		$option = array(); //prevent problems
- 
+
 		$siteData = array();
 		$siteData['site_id'] 	= $site_id;
 		$siteData['user'] 		= $user;

@@ -34,7 +34,7 @@ class plgOnwardJoomla15_Sections extends OnwardImporterAdapter
 	protected function getListQuery($sql = null)
 	{
 		// Check if we can use the supplied SQL query.
-		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
+		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : JFactory::getDbo()->getQuery(true);
 		$sql->select('a.*');
 		$sql->from('#__sections AS a');
 

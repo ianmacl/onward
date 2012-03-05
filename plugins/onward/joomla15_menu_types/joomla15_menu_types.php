@@ -34,7 +34,7 @@ class plgOnwardJoomla15_Menu_Types extends OnwardImporterAdapter
 	protected function getListQuery($sql = null)
 	{
 		// Check if we can use the supplied SQL query.
-		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
+		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : JFactory::getDbo()->getQuery(true);
 		$sql->select('a.*');
 		$sql->from('#__menu_types AS a');
 

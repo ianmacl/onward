@@ -34,7 +34,7 @@ class plgOnwardJoomla15_Components extends OnwardImporterAdapter
 	protected function getListQuery($sql = null)
 	{
 		// Check if we can use the supplied SQL query.
-		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
+		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : JFactory::getDbo()->getQuery(true);
 		$sql->select('a.*');
 		$sql->from('#__components AS a');
 		$sql->where('parent = 0');
@@ -56,7 +56,7 @@ class plgOnwardJoomla15_Components extends OnwardImporterAdapter
 
 		$db = JFactory::getDBO();
 
-		$sql = new JDatabaseQuery();
+		$sql = $db->getQuery(true);
 		$sql->select('a.extension_id');
 		$sql->from('#__extensions AS a');
 		$sql->where('name = '.$db->quote($oldComponent->option));
@@ -85,7 +85,7 @@ class plgOnwardJoomla15_Components extends OnwardImporterAdapter
 		{
 			return false;
 		}
-		
+
 		$extObject = JTable::getInstance('extension');
 
 		$extObject->extension_id = 0;

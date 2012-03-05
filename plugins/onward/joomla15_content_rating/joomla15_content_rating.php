@@ -11,7 +11,7 @@ defined('_JEXEC') or die;
 /**
  * Prototype adapter class for the Onward Importer package.
  *
- * @package	Onward	
+ * @package	Onward
  * @subpackage	joomla15_content_frontpage
  */
 class plgOnwardJoomla15_Content_Rating extends OnwardImporterAdapter
@@ -39,7 +39,7 @@ class plgOnwardJoomla15_Content_Rating extends OnwardImporterAdapter
 	protected function getListQuery($sql = null)
 	{
 		// Check if we can use the supplied SQL query.
-		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : new JDatabaseQuery();
+		$sql = is_a($sql, 'JDatabaseQuery') ? $sql : JFactory::getDbo()->getQuery(true);
 		$sql->select('a.*');
 		$sql->from('#__content_rating AS a');
 
@@ -78,6 +78,6 @@ class plgOnwardJoomla15_Content_Rating extends OnwardImporterAdapter
 		}
 
 		return false;
-		
+
 	}
 }
