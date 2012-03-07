@@ -18,16 +18,16 @@ JHtml::_('behavior.tooltip');
 		<thead>
 			<tr>
 				<th width="1%">
-					<input type="checkbox" name="checkall-toggle" value="" onclick="checkAll(this)" />
+
 				</th>
 				<th>
-					<?php echo JText::_('Site Name'); ?>
+					<?php echo JText::_('COM_ONWARD_SITE_NAME'); ?>
 				</th>
 				<th>
-					<?php echo JText::_('Location'); ?>
+					<?php echo JText::_('COM_ONWARD_LOCATION'); ?>
 				</th>
 				<th width="5%">
-					<?php echo JText::_('Version'); ?>
+					<?php echo JText::_('COM_ONWARD_VERSION'); ?>
 				</th>
 			</tr>
 		</thead>
@@ -39,7 +39,7 @@ JHtml::_('behavior.tooltip');
 			?>
 			<tr class="row<?php echo $i % 2; ?>">
 				<td class="center">
-					<?php echo JHtml::_('grid.id', $i, $item->id); ?>
+					<?php  ?>
 				</td>
 				<td>
 					<a href="<?php echo $item->import_link; ?>" alt="Import <?php echo $this->escape($item->name); ?>"><?php echo $this->escape($item->name); ?></a>
