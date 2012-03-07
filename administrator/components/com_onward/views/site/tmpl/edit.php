@@ -5,7 +5,7 @@
  * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
  * @license		GNU General Public License version 2; see LICENSE.txt
  */
- 
+
 // No direct access.
 defined('_JEXEC') or die;
 
@@ -31,7 +31,7 @@ JHtml::_('script', 'system/progressbar-uncompressed.js', false, true);
 		url: 'index.php?<?php echo JSession::getFormToken(); ?>=1'
 	});
 
-	window.addEvent('domready', function(){		
+	window.addEvent('domready', function(){
 		$$('.progress_bar').each(function(item) {
 			progressBars[item.get('id')] = new Fx.ProgressBar(item, {
 				text: new Element('span', {'class': 'progress-text'}).inject(item, 'bottom'),
@@ -57,23 +57,23 @@ JHtml::_('script', 'system/progressbar-uncompressed.js', false, true);
 
 			<li><?php echo JTEXT::_('COM_ONWARD_DESCRIPTION'); ?>
 			<?php echo $this->item->description; ?></li>
-			
+
 		</ul>
 		<div class="clr"> </div>
 		<table class="adminlist">
 			<thead>
 			<tr>
 				<th width="1%">
-					<input type="checkbox" name="checkall-toggle" value="" onclick="checkAll(this)" />
+
 				</th>
 				<th>
-					<?php echo JText::_('Asset'); ?>
+					<?php echo JText::_('COM_ONWARD_ASSET'); ?>
 				</th>
 				<th>
-					<?php echo JText::_('Scan Date'); ?>
+					<?php echo JText::_('COM_ONWARD_SCAN_DATE'); ?>
 				</th>
 				<th width="20%">
-					<?php echo JText::_('Progress'); ?>
+					<?php echo JText::_('COM_ONWARD_PROGRESS'); ?>
 				</th>
 			</tr>
 			</thead>
@@ -85,7 +85,7 @@ JHtml::_('script', 'system/progressbar-uncompressed.js', false, true);
 			?>
 			<tr class="row<?php echo $i % 2; ?>">
 				<td class="center">
-					<?php echo JHtml::_('grid.id', $i, $item->id); ?>
+					<?php  ?>
 				</td>
 				<td>
 					<?php echo $item->asset; ?>
