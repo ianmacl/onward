@@ -52,11 +52,18 @@ class OnwardViewSites extends JView
 	 */
 	protected function addToolbar()
 	{
-		JToolBarHelper::title(JText::_('COM_ONWARD_MANAGER_SITES'), 'onward.png');
+		$state	= $this->get('State');
+		$canDo	= OnwardHelper::getActions();
+		$user	= JFactory::getUser();
 
-		JToolBarHelper::addNew('sites.discover', 'JTOOLBAR_DISCOVER');
-		JToolBarHelper::preferences('com_onward');
-		JToolBarHelper::divider();
+		JToolBarHelper::title(JText::_('COM_ONWARD_MANAGER_SITES'), 'onward.png');
+		if ($canDo->get('core.admin')) {
+			JToolBarHelper::addNew('sites.discover', 'JTOOLBAR_DISCOVER');
+		}
+		if ($canDo->get('core.admin')) {
+			JToolBarHelper::preferences('com_onward');
+			JToolBarHelper::divider();
+		}
 		JToolBarHelper::help('JHELP_COMPONENTS_ONWARD_SITES');
 	}
 }
