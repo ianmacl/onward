@@ -5,7 +5,7 @@
  * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
  * @license		GNU General Public License version 2; see LICENSE.txt
  */
- 
+
 // No direct access
 defined('_JEXEC') or die;
 
@@ -50,10 +50,18 @@ class OnwardViewSite extends JView
 	{
 		JRequest::setVar('hidemainmenu', true);
 
+
+		$state	= $this->get('State');
+		$canDo	= OnwardHelper::getActions();
+		$user	= JFactory::getUser();
+
 		JToolBarHelper::title(JText::_('COM_ONWARD_MANAGER_SITE_VIEW'), 'onward.png');
-		JToolBarHelper::addNew('site.batch', 'JTOOLBAR_BATCH');
-		JToolBarHelper::addNew('site.scan', 'JTOOLBAR_SCAN');
-		JToolBarHelper::cancel('site.cancel','JTOOLBAR_CANCEL');
+		if ($canDo->get('core.admin')) {
+			JToolBarHelper::addNew('site.batch', 'JTOOLBAR_BATCH');
+			JToolBarHelper::addNew('site.scan', 'JTOOLBAR_SCAN');
+			JToolBarHelper::cancel('site.cancel','JTOOLBAR_CANCEL');
+		}
+
 		JToolBarHelper::divider();
 		JToolBarHelper::help('JHELP_COMPONENTS_ONWARD_SITE_VIEW');
 	}

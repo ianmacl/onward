@@ -26,7 +26,7 @@ class plgOnwardJoomla15_Categories extends OnwardImporterAdapter
 	protected $context = 'jos_categories';
 
 	/**
-	 * Method to get the SQL query used to retrieve the list of content items.
+	 * Method to get the SQL query used to retrieve the list of categories.
 	 *
 	 * @param	mixed		A JDatabaseQuery object or null.
 	 * @return	object		A JDatabaseQuery object.
