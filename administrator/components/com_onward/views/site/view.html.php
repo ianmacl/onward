@@ -48,8 +48,9 @@ class OnwardViewSite extends JView
 	 */
 	protected function addToolbar()
 	{
-		JRequest::setVar('hidemainmenu', true);
+		JLoader::register('OnwardHelper', JPATH_COMPONENT_ADMINISTRATOR.DS.'helpers'.DS.'onward.php');
 
+		JRequest::setVar('hidemainmenu', true);
 
 		$state	= $this->get('State');
 		$canDo	= OnwardHelper::getActions();

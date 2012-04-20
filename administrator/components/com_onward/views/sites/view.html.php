@@ -52,6 +52,8 @@ class OnwardViewSites extends JView
 	 */
 	protected function addToolbar()
 	{
+		JLoader::register('OnwardHelper', JPATH_COMPONENT_ADMINISTRATOR.DS.'helpers'.DS.'onward.php');
+
 		$state	= $this->get('State');
 		$canDo	= OnwardHelper::getActions();
 		$user	= JFactory::getUser();
